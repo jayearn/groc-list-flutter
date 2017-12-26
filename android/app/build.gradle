@@ -26,10 +26,26 @@ android {
     lintOptions {
         disable 'InvalidPackage'
     }
-
+    
+    signingConfigs {
+        release {
+            storeFile file("release.jks")
+            storePassword "android"
+            keyAlias "app"
+            keyPassword "android"
+        }
+        debug {
+            storeFile file("debug.jks")
+            storePassword "android"
+            keyAlias "app"
+            keyPassword "android"
+        }
+    }
+    
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.yourcompany.groclistflutter"
+        applicationId "de.joernahrens.grocerylist.debug"
+        signingConfig = signingConfigs.debug
         minSdkVersion 16
         targetSdkVersion 25
         versionCode 1
@@ -54,5 +70,7 @@ dependencies {
     androidTestCompile 'com.android.support:support-annotations:25.4.0'
     androidTestCompile 'com.android.support.test:runner:0.5'
     androidTestCompile 'com.android.support.test:rules:0.5'
-    compile 'org.jetbrains.kotlin:kotlin-stdlib-jre7:1.1.2-4'
+    compile 'org.jetbrains.kotlin:kotlin-stdlib-jre7:1.2.10'
 }
+
+apply plugin: 'com.google.gms.google-services'

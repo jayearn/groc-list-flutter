@@ -1,4 +1,4 @@
-package com.yourcompany.groclistflutter
+package de.joernahrens.grocerylist
 
 import android.os.Bundle
 
