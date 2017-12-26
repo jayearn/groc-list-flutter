@@ -84,6 +84,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   DatabaseReference listsRef;
+  DatabaseReference listItemsRef;
 
   void _incrementCounter() {
     _ensureLoggedIn().then(_connectToDatabase);
@@ -99,10 +100,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _connectToDatabase(FirebaseUser user) {
     setState(() {
-      listsRef =
-          FirebaseDatabase.instance.reference().child('lists').child(user.uid);
+      listsRef = FirebaseDatabase.instance.reference()
+          .child('lists').child(user.uid);
+      listItemsRef = FirebaseDatabase.instance.reference()
+          .child('listItems').child(user.uid);
 
       listsRef.onChildAdded.listen((Event event) {
+        print(event.snapshot.value);
+      });
+      listItemsRef.onChildAdded.listen((Event event) {
         print(event.snapshot.value);
       });
     });
@@ -136,12 +142,13 @@ class _MyHomePageState extends State<MyHomePage> {
             query: listsRef,
             sort: (a, b) => b.key.compareTo(a.key),
             padding: new EdgeInsets.all(8.0),
-            reverse: true,
+            reverse: false,
             itemBuilder: (_, DataSnapshot snapshot,
                 Animation<double> animation) {
               return new GroceryListItem(
-                  snapshot: snapshot,
-                  animation: animation
+                snapshot: snapshot,
+                animation: animation,
+                homePageState: this,
               );
             },
           ),
@@ -154,17 +161,68 @@ class _MyHomePageState extends State<MyHomePage> {
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
+
+  void editList(String databaseKey) {
+    print('edit list: $databaseKey');
+  }
 }
 
 class GroceryListItem extends StatelessWidget {
-  GroceryListItem({this.snapshot, this.animation});
+  GroceryListItem({this.snapshot, this.animation, this.homePageState});
 
   final DataSnapshot snapshot;
   final Animation animation;
+  final _MyHomePageState homePageState;
+
+  void onEditPressed(String databaseKey) {
+    homePageState.editList(databaseKey);
+  }
+
+  void onDeletePressed(String databaseKey) {
+//    homePageState.editList(databaseKey);
+  }
 
   @override
   Widget build(BuildContext context) {
     print('building a list entry');
-    return new Text(snapshot.value['name']);
+    return new Card(
+      child: new Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          new Container(
+              padding: const EdgeInsets.fromLTRB(16.0, 16.0, 0.0, 0.0),
+              child: new Row(
+                  children: [
+                    new Text(snapshot.value['name'],
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ])),
+          new Container(
+              padding: const EdgeInsets.fromLTRB(16.0, 16.0, 0.0, 0.0),
+              child: new Row(
+                  children: [
+                    new Text(snapshot.value['ownerMail']),
+                  ])),
+          new ButtonTheme.bar(
+            child: new ButtonBar(
+              children: <Widget>[
+                new FlatButton(
+                  child: const Text('EDIT'),
+                  onPressed: () {
+                    onEditPressed(snapshot.key);
+                  },
+                ),
+                new FlatButton(
+                  child: const Text('DELETE',
+                      style: const TextStyle(color: Colors.redAccent)),
+                  onPressed: () {
+                    onDeletePressed(snapshot.key);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
