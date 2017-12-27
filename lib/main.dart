@@ -32,12 +32,16 @@ class GroceryListAppState extends State<GroceryListApp> {
     return new MaterialApp(
       title: 'Grocery List',
       theme: new ThemeData(
-        primarySwatch: Colors.cyan,
+          primarySwatch: Colors.cyan,
+          fontFamily: ,
+          splashColor: Colors.white,
+          scaffoldBackgroundColor: new Color.fromARGB(0xFF, 0xEB, 0xF0, 0xF2)
       ),
+      initialRoute: '/login',
       routes: {
-        '/': (BuildContext context) => new LoginScreen(title: 'Welcome'),
-        '/overview': (BuildContext context) =>
+        '/': (BuildContext context) =>
         new OverviewScreen(title: 'Grocery List'),
+        '/login': (BuildContext context) => new LoginScreen(title: 'Welcome'),
         '/list': (BuildContext context) =>
         new ListScreen(appState: _appState, title: 'Bla',),
       },
@@ -66,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       if (user != null) {
         _appState.user = user;
-        Navigator.of(context).pushNamed('/overview');
+        Navigator.of(context).pushNamed('/');
       }
     });
   }

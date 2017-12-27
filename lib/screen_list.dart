@@ -65,9 +65,32 @@ class GroceryListItem extends StatelessWidget {
 //    homePageState.editList(databaseKey);
   }
 
+  void onDragStart(DragStartDetails details) {
+    print('onDragStart');
+    print(details.toString());
+  }
+
+  void onDragStop(DragEndDetails details) {
+    print('onDragStop');
+    print(details.toString());
+  }
+
   @override
   Widget build(BuildContext context) {
     print('building a list entry');
+
+    return new ListTile(
+      leading: new GestureDetector(
+        child: new Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: new Icon (Icons.drag_handle, color: Colors.black54)),
+        onVerticalDragStart: onDragStart,
+        onVerticalDragEnd: onDragStop,
+      ),
+      title: new Text(snapshot.value['name']),
+//        subtitle: new Text(_contact.email)
+    );
+
     return new Card(
       child: new Column(
         mainAxisSize: MainAxisSize.min,
