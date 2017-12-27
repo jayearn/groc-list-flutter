@@ -33,15 +33,12 @@ class GroceryListAppState extends State<GroceryListApp> {
       title: 'Grocery List',
       theme: new ThemeData(
           primarySwatch: Colors.cyan,
-          fontFamily: ,
           splashColor: Colors.white,
           scaffoldBackgroundColor: new Color.fromARGB(0xFF, 0xEB, 0xF0, 0xF2)
       ),
-      initialRoute: '/login',
       routes: {
         '/': (BuildContext context) =>
         new OverviewScreen(title: 'Grocery List'),
-        '/login': (BuildContext context) => new LoginScreen(title: 'Welcome'),
         '/list': (BuildContext context) =>
         new ListScreen(appState: _appState, title: 'Bla',),
       },
@@ -49,39 +46,39 @@ class GroceryListAppState extends State<GroceryListApp> {
   }
 }
 
-class LoginScreen extends StatefulWidget {
-  LoginScreen({Key key, this.title}) : super(key: key);
-
-  final String title;
-
-  @override
-  State createState() => new _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
-
-  _LoginScreenState() {
-    _login();
-  }
-
-  _login() async {
-    FirebaseUser user = await ensureLoggedIn();
-    print('user: ' + user.toString());
-    setState(() {
-      if (user != null) {
-        _appState.user = user;
-        Navigator.of(context).pushNamed('/');
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return new Center(
-      child: new Text('Hi!'),
-    );
-  }
-}
+//class LoginScreen extends StatefulWidget {
+//  LoginScreen({Key key, this.title}) : super(key: key);
+//
+//  final String title;
+//
+//  @override
+//  State createState() => new _LoginScreenState();
+//}
+//
+//class _LoginScreenState extends State<LoginScreen> {
+//
+//  _LoginScreenState() {
+//    _login();
+//  }
+//
+//  _login() async {
+//    FirebaseUser user = await ensureLoggedIn();
+//    print('user: ' + user.toString());
+//    setState(() {
+//      if (user != null) {
+//        _appState.user = user;
+//        Navigator.of(context).pushNamed('/');
+//      }
+//    });
+//  }
+//
+//  @override
+//  Widget build(BuildContext context) {
+//    return new Center(
+//      child: new Text('Hi!'),
+//    );
+//  }
+//}
 
 class OverviewScreen extends StatefulWidget {
   OverviewScreen({Key key, this.title}) : super(key: key);
@@ -95,6 +92,21 @@ class OverviewScreen extends StatefulWidget {
 class _OverviewScreenState extends State<OverviewScreen> {
 
   DatabaseReference listsRef;
+
+  _OverviewScreenState() {
+    _login();
+  }
+
+  _login() async {
+    FirebaseUser user = await ensureLoggedIn();
+    print('user: ' + user.toString());
+    setState(() {
+      if (user != null) {
+        _appState.user = user;
+        _connectToDatabase(_appState.user);
+      }
+    });
+  }
 
   void _incrementCounter() {
     ensureLoggedIn().then(_connectToDatabase);
@@ -120,45 +132,45 @@ class _OverviewScreenState extends State<OverviewScreen> {
   @override
   void initState() {
     super.initState();
-    _connectToDatabase(_appState.user);
-    listsRef = FirebaseDatabase.instance.reference().child('lists').child(
-        _appState.user.uid);
+    listsRef = null;
   }
-
 
   @override
   Widget build(BuildContext context) {
     print('building state again');
     print(listsRef != null ? listsRef.path : 'No path yet');
 
-    return new Scaffold(
-      appBar: new AppBar(
-        title: new Text(widget.title),
-      ),
-      body: new Column(children: <Widget>[
-        new Flexible(
-          child: new FirebaseAnimatedList(
-            query: listsRef,
-            sort: (a, b) => b.key.compareTo(a.key),
-            padding: new EdgeInsets.all(8.0),
-            reverse: false,
-            itemBuilder: (_, DataSnapshot snapshot,
-                Animation<double> animation) {
-              return new GroceryListItem(
-                snapshot: snapshot,
-                animation: animation,
-                homePageState: this,
-              );
-            },
-          ),
+    if (listsRef == null) {
+      return new Text('Logging in..');
+    } else
+      return new Scaffold(
+        appBar: new AppBar(
+          title: new Text(widget.title),
         ),
-      ]),
-      floatingActionButton: new FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: new Icon(Icons.add),
-      ),
-    );
+        body: new Column(children: <Widget>[
+          new Flexible(
+            child: new FirebaseAnimatedList(
+              query: listsRef,
+              sort: (a, b) => b.key.compareTo(a.key),
+              padding: new EdgeInsets.all(8.0),
+              reverse: false,
+              itemBuilder: (_, DataSnapshot snapshot,
+                  Animation<double> animation) {
+                return new GroceryListItem(
+                  snapshot: snapshot,
+                  animation: animation,
+                  homePageState: this,
+                );
+              },
+            ),
+          ),
+        ]),
+        floatingActionButton: new FloatingActionButton(
+          onPressed: _incrementCounter,
+          tooltip: 'Increment',
+          child: new Icon(Icons.add),
+        ),
+      );
   }
 }
 
