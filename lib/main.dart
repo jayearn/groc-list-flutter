@@ -1,47 +1,32 @@
-import 'dart:async';
-
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-
-final analytics = new FirebaseAnalytics();
-final auth = FirebaseAuth.instance;
-final googleSignIn = new GoogleSignIn();
-
-Future<FirebaseUser> _ensureLoggedIn() async {
-  FirebaseUser firebaseUser = await auth.currentUser();
-  if (firebaseUser != null) return firebaseUser;
-
-  GoogleSignInAccount user = googleSignIn.currentUser;
-  if (user == null)
-    user = await googleSignIn.signInSilently();
-  if (user == null) {
-    user = await googleSignIn.signIn();
-    analytics.logLogin();
-  }
-
-  if (await auth.currentUser() == null && googleSignIn.currentUser != null) {
-    GoogleSignInAuthentication credentials =
-    await googleSignIn.currentUser.authentication;
-    return auth.signInWithGoogle(
-      idToken: credentials.idToken,
-      accessToken: credentials.accessToken,
-    );
-  } else {
-    return null;
-  }
-}
+import 'package:groc_list_flutter/firebase.dart';
+import 'package:groc_list_flutter/screen_list.dart';
+import 'package:groc_list_flutter/util.dart';
 
 void main() {
-  runApp(new MyApp());
+  runApp(new GroceryListApp());
 }
 
-class MyApp extends StatelessWidget {
+AppState _appState;
+
+class GroceryListApp extends StatefulWidget {
+  @override
+  State createState() {
+    return new GroceryListAppState();
+  }
+}
+
+class GroceryListAppState extends State<GroceryListApp> {
+
+  GroceryListAppState() {
+    _appState = new AppState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
@@ -49,7 +34,47 @@ class MyApp extends StatelessWidget {
       theme: new ThemeData(
         primarySwatch: Colors.cyan,
       ),
-      home: new OverviewScreen(title: 'Grocery List'),
+      routes: {
+        '/': (BuildContext context) => new LoginScreen(title: 'Welcome'),
+        '/overview': (BuildContext context) =>
+        new OverviewScreen(title: 'Grocery List'),
+        '/list': (BuildContext context) =>
+        new ListScreen(appState: _appState, title: 'Bla',),
+      },
+    );
+  }
+}
+
+class LoginScreen extends StatefulWidget {
+  LoginScreen({Key key, this.title}) : super(key: key);
+
+  final String title;
+
+  @override
+  State createState() => new _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+
+  _LoginScreenState() {
+    _login();
+  }
+
+  _login() async {
+    FirebaseUser user = await ensureLoggedIn();
+    print('user: ' + user.toString());
+    setState(() {
+      if (user != null) {
+        _appState.user = user;
+        Navigator.of(context).pushNamed('/overview');
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return new Center(
+      child: new Text('Hi!'),
     );
   }
 }
@@ -64,39 +89,38 @@ class OverviewScreen extends StatefulWidget {
 }
 
 class _OverviewScreenState extends State<OverviewScreen> {
-  int _counter = 0;
+
   DatabaseReference listsRef;
-  DatabaseReference listItemsRef;
 
   void _incrementCounter() {
-    _ensureLoggedIn().then(_connectToDatabase);
+    ensureLoggedIn().then(_connectToDatabase);
     setState(() {
-      _counter++;
+      bool bla = true;
     });
   }
 
   void _connectToDatabase(FirebaseUser user) {
     setState(() {
+      print('setState and set listsRef');
       listsRef = FirebaseDatabase.instance.reference()
           .child('lists').child(user.uid);
-
-//      listsRef.onChildAdded.listen((Event event) {
-//        print(event.snapshot.value);
-//      });
     });
+  }
+
+  void editList(String databaseKey) {
+    print('edit list: $databaseKey');
+    _appState.selectedListKey = databaseKey;
+    Navigator.of(context).pushNamed('/list');
   }
 
   @override
   void initState() {
     super.initState();
-    listsRef =
-        FirebaseDatabase.instance.reference().child('lists').child(
-            'il3y6ivaP7dwp4NT2VldUhweTRx2');
+    _connectToDatabase(_appState.user);
+    listsRef = FirebaseDatabase.instance.reference().child('lists').child(
+        _appState.user.uid);
   }
 
-  void editList(String databaseKey) {
-    print('edit list: $databaseKey');
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -174,16 +198,16 @@ class GroceryListItem extends StatelessWidget {
             child: new ButtonBar(
               children: <Widget>[
                 new FlatButton(
-                  child: const Text('EDIT'),
-                  onPressed: () {
-                    onEditPressed(snapshot.key);
-                  },
-                ),
-                new FlatButton(
                   child: const Text('DELETE',
                       style: const TextStyle(color: Colors.redAccent)),
                   onPressed: () {
                     onDeletePressed(snapshot.key);
+                  },
+                ),
+                new FlatButton(
+                  child: const Text('EDIT'),
+                  onPressed: () {
+                    onEditPressed(snapshot.key);
                   },
                 ),
               ],
