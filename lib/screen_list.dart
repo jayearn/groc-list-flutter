@@ -13,15 +13,16 @@ class ListScreen extends StatefulWidget {
 
   @override
   _ListScreenState createState() {
-    listRef = FirebaseDatabase.instance.reference()
-        .child('listItems').child(appState.user.uid).child(
-        appState.selectedListKey);
+    listRef = FirebaseDatabase.instance
+        .reference()
+        .child('listItems')
+        .child(appState.user.uid)
+        .child(appState.selectedListKey);
     return new _ListScreenState();
   }
 }
 
 class _ListScreenState extends State<ListScreen> {
-
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
@@ -35,9 +36,9 @@ class _ListScreenState extends State<ListScreen> {
             sort: (a, b) => b.key.compareTo(a.key),
             padding: new EdgeInsets.all(8.0),
             reverse: false,
-            itemBuilder: (_, DataSnapshot snapshot,
-                Animation<double> animation) {
-              return new GroceryListItem(
+            itemBuilder: (BuildContext context, DataSnapshot snapshot,
+                Animation<double> animation, int index) {
+              return new ListEntry(
                 snapshot: snapshot,
                 animation: animation,
                 listScreenState: this,
@@ -50,8 +51,8 @@ class _ListScreenState extends State<ListScreen> {
   }
 }
 
-class GroceryListItem extends StatelessWidget {
-  GroceryListItem({this.snapshot, this.animation, this.listScreenState});
+class ListEntry extends StatelessWidget {
+  ListEntry({this.snapshot, this.animation, this.listScreenState});
 
   final DataSnapshot snapshot;
   final Animation animation;
@@ -83,53 +84,11 @@ class GroceryListItem extends StatelessWidget {
       leading: new GestureDetector(
         child: new Padding(
             padding: const EdgeInsets.all(4.0),
-            child: new Icon (Icons.drag_handle, color: Colors.black54)),
+            child: new Icon(Icons.drag_handle, color: Colors.black54)),
         onVerticalDragStart: onDragStart,
         onVerticalDragEnd: onDragStop,
       ),
       title: new Text(snapshot.value['name']),
-//        subtitle: new Text(_contact.email)
-    );
-
-    return new Card(
-      child: new Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          new Container(
-              padding: const EdgeInsets.fromLTRB(16.0, 16.0, 0.0, 0.0),
-              child: new Row(
-                  children: [
-                    new Text(snapshot.value['name'],
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold)),
-                  ])),
-          new Container(
-              padding: const EdgeInsets.fromLTRB(16.0, 16.0, 0.0, 0.0),
-              child: new Row(
-                  children: [
-                    new Text(snapshot.value['name']),
-                  ])),
-          new ButtonTheme.bar(
-            child: new ButtonBar(
-              children: <Widget>[
-                new FlatButton(
-                  child: const Text('DELETE',
-                      style: const TextStyle(color: Colors.redAccent)),
-                  onPressed: () {
-                    onDeletePressed(snapshot.key);
-                  },
-                ),
-                new FlatButton(
-                  child: const Text('EDIT'),
-                  onPressed: () {
-                    onEditPressed(snapshot.key);
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

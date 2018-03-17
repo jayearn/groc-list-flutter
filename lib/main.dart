@@ -22,7 +22,6 @@ class GroceryListApp extends StatefulWidget {
 }
 
 class GroceryListAppState extends State<GroceryListApp> {
-
   GroceryListAppState() {
     _appState = new AppState();
   }
@@ -34,51 +33,18 @@ class GroceryListAppState extends State<GroceryListApp> {
       theme: new ThemeData(
           primarySwatch: Colors.cyan,
           splashColor: Colors.white,
-          scaffoldBackgroundColor: new Color.fromARGB(0xFF, 0xEB, 0xF0, 0xF2)
-      ),
+          scaffoldBackgroundColor: new Color.fromARGB(0xFF, 0xEB, 0xF0, 0xF2)),
       routes: {
         '/': (BuildContext context) =>
-        new OverviewScreen(title: 'Grocery List'),
-        '/list': (BuildContext context) =>
-        new ListScreen(appState: _appState, title: 'Bla',),
+            new OverviewScreen(title: 'Grocery List'),
+        '/list': (BuildContext context) => new ListScreen(
+              appState: _appState,
+              title: 'Bla',
+            ),
       },
     );
   }
 }
-
-//class LoginScreen extends StatefulWidget {
-//  LoginScreen({Key key, this.title}) : super(key: key);
-//
-//  final String title;
-//
-//  @override
-//  State createState() => new _LoginScreenState();
-//}
-//
-//class _LoginScreenState extends State<LoginScreen> {
-//
-//  _LoginScreenState() {
-//    _login();
-//  }
-//
-//  _login() async {
-//    FirebaseUser user = await ensureLoggedIn();
-//    print('user: ' + user.toString());
-//    setState(() {
-//      if (user != null) {
-//        _appState.user = user;
-//        Navigator.of(context).pushNamed('/');
-//      }
-//    });
-//  }
-//
-//  @override
-//  Widget build(BuildContext context) {
-//    return new Center(
-//      child: new Text('Hi!'),
-//    );
-//  }
-//}
 
 class OverviewScreen extends StatefulWidget {
   OverviewScreen({Key key, this.title}) : super(key: key);
@@ -90,7 +56,6 @@ class OverviewScreen extends StatefulWidget {
 }
 
 class _OverviewScreenState extends State<OverviewScreen> {
-
   DatabaseReference listsRef;
 
   _OverviewScreenState() {
@@ -118,8 +83,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
   void _connectToDatabase(FirebaseUser user) {
     setState(() {
       print('setState and set listsRef');
-      listsRef = FirebaseDatabase.instance.reference()
-          .child('lists').child(user.uid);
+      listsRef =
+          FirebaseDatabase.instance.reference().child('lists').child(user.uid);
     });
   }
 
@@ -154,14 +119,13 @@ class _OverviewScreenState extends State<OverviewScreen> {
               sort: (a, b) => b.key.compareTo(a.key),
               padding: new EdgeInsets.all(8.0),
               reverse: false,
-              itemBuilder: (_, DataSnapshot snapshot,
-                  Animation<double> animation) {
-                return new GroceryListItem(
-                  snapshot: snapshot,
-                  animation: animation,
-                  homePageState: this,
-                );
-              },
+              itemBuilder: (BuildContext context, DataSnapshot snapshot,
+                      Animation<double> animation, int index) =>
+                  new GroceryListCard(
+                    snapshot: snapshot,
+                    animation: animation,
+                    homePageState: this,
+                  ),
             ),
           ),
         ]),
@@ -174,8 +138,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
   }
 }
 
-class GroceryListItem extends StatelessWidget {
-  GroceryListItem({this.snapshot, this.animation, this.homePageState});
+class GroceryListCard extends StatelessWidget {
+  GroceryListCard({this.snapshot, this.animation, this.homePageState});
 
   final DataSnapshot snapshot;
   final Animation animation;
@@ -191,45 +155,50 @@ class GroceryListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('building a list entry');
     return new Card(
-      child: new Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          new Container(
+      child: new InkWell(
+        onTap: () => onEditPressed(snapshot.key),
+        child: new Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            new Container(
               padding: const EdgeInsets.fromLTRB(16.0, 16.0, 0.0, 0.0),
               child: new Row(
-                  children: [
-                    new Text(snapshot.value['name'],
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold)),
-                  ])),
-          new Container(
-              padding: const EdgeInsets.fromLTRB(16.0, 16.0, 0.0, 0.0),
-              child: new Row(
-                  children: [
-                    new Text(snapshot.value['ownerMail']),
-                  ])),
-          new ButtonTheme.bar(
-            child: new ButtonBar(
-              children: <Widget>[
-                new FlatButton(
-                  child: const Text('DELETE',
-                      style: const TextStyle(color: Colors.redAccent)),
-                  onPressed: () {
-                    onDeletePressed(snapshot.key);
-                  },
-                ),
-                new FlatButton(
-                  child: const Text('EDIT'),
-                  onPressed: () {
-                    onEditPressed(snapshot.key);
-                  },
-                ),
-              ],
+                children: [
+                  new Text(snapshot.value['name'],
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
             ),
-          ),
-        ],
+            new Container(
+              padding: const EdgeInsets.fromLTRB(16.0, 16.0, 0.0, 0.0),
+              child: new Row(
+                children: [
+                  new Text(snapshot.value['ownerMail']),
+                ],
+              ),
+            ),
+            new ButtonTheme.bar(
+              child: new ButtonBar(
+                children: <Widget>[
+                  new FlatButton(
+                    child: const Text('DELETE',
+                        style: const TextStyle(color: Colors.redAccent)),
+                    onPressed: () {
+                      onDeletePressed(snapshot.key);
+                    },
+                  ),
+                  new FlatButton(
+                    child: const Text('EDIT'),
+                    onPressed: () {
+                      onEditPressed(snapshot.key);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
